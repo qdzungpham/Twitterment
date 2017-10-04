@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('cab432assignment2:server');
 var http = require('http');
+const Twitter = require('./../services/TwitterService');
+const Sentiment = require('./../services/SentimentAnalysisService');
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +22,59 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/*
+Create Server and Socket.io Instance
+==================*/
+const io = require('socket.io').listen(server);
+const connections = [];
+
+//Create socket.io Connection with Client
+//All Socket Listeners Here
+io.on('connection', function(socket) {
+    connections.push(socket);
+    console.log('%s Connected. %s sockets connected', socket.id, connections.length);
+
+    let prevSearch = false;
+    let twitterStream;
+
+    socket.on('search', function(payload) {
+        console.log('Keyword: %s', payload.keyword);
+
+        if(prevSearch) {
+            twitterStream.stop();
+            console.log(prevSearch);
+            console.log('stop stream');
+
+        } else {
+            prevSearch = true;
+        }
+
+        twitterStream = Twitter.stream(payload.keyword);
+
+        let lastTimestamp = Date.now(),
+            speedLimiter = 800; //800ms
+
+        //Turn on Twitter Stream
+        twitterStream.on('tweet', function(tweet) {
+
+            if(tweet.timestamp_ms - lastTimestamp > speedLimiter) {
+
+                lastTimestamp = Date.now();
+
+                // Send Tweet Object to Client
+                socket.emit('sendTweet', {tweet: Sentiment.getSentimentTweet(tweet)});
+            }
+        });
+
+        socket.once('disconnect', function() {
+            connections.splice(connections.indexOf(socket), 1);
+            socket.disconnect();
+            twitterStream.stop();
+            console.log('Socket disconnected: %s sockets remaining', connections.length);
+        });
+    })
+});
 
 /**
  * Listen on provided port, on all network interfaces.

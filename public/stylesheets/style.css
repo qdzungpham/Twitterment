@@ -1,8 +1,18 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font-family: 'Open Sans', sans-serif;
+  position: relative;
+  margin: 0px;
+  font-size: 14px;
+  padding: 0px;
 }
 
-a {
-  color: #00B7FF;
+.page-content > .row {
+  margin-left: 0px !important;
+  margin-right: 0px !important;
+  margin-top: 60px;
+}
+
+.trendBtn {
+  margin: 2px;
+  font-size: 12px;
 }
