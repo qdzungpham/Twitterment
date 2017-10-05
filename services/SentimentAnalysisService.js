@@ -1,8 +1,10 @@
 const Sentiment = require('sentiment');
 
-function appendTweet(tweet, sentiment) {
+function appendTweet(tweet, sentiment, overallSentiment, icon) {
     const sentimentTweet = {
         sentiment: sentiment,
+        overallSentiment: overallSentiment,
+        icon: icon,
         created_at: tweet.created_at,
         timestamp_ms: tweet.timestamp_ms,
         id_str: tweet.id_str,
@@ -21,17 +23,20 @@ function appendTweet(tweet, sentiment) {
 }
 module.exports = {
     getSentimentTweet: function(tweet) {
-        var tweetSentiment = Sentiment(tweet.text);
-
-        /*
+        let tweetSentiment = Sentiment(tweet.text);
+        let overallSentiment;
+        let icon;
         if(tweetSentiment.score < 0) {
-            tweetSentiment = 'negative';
+            overallSentiment = 'negative';
+            icon = `<i class="fa fa-frown-o" aria-hidden="true" style="color:red"></i>`;
         } else if(tweetSentiment.score > 0) {
-            tweetSentiment = 'positive';
+            overallSentiment = 'positive';
+            icon = `<i class="fa fa-smile-o" aria-hidden="true" style="color:darkorange"></i>`;
         } else {
-            tweetSentiment = 'neutral';
+            overallSentiment = 'neutral';
+            icon = `<i class="fa fa-meh-o" aria-hidden="true"></i>`;
         }
-        */
-        return appendTweet(tweet, tweetSentiment);
+
+        return appendTweet(tweet, tweetSentiment, overallSentiment, icon);
     }
 };

@@ -53,11 +53,12 @@ io.on('connection', function(socket) {
         twitterStream = Twitter.stream(payload.keyword);
 
         let lastTimestamp = Date.now(),
-            speedLimiter = 800; //800ms
+            speedLimiter = 500; //500ms
 
         //Turn on Twitter Stream
         twitterStream.on('tweet', function(tweet) {
 
+            //
             if(tweet.timestamp_ms - lastTimestamp > speedLimiter) {
 
                 lastTimestamp = Date.now();
@@ -66,14 +67,22 @@ io.on('connection', function(socket) {
                 socket.emit('sendTweet', {tweet: Sentiment.getSentimentTweet(tweet)});
             }
         });
-
+        /*
         socket.once('disconnect', function() {
             connections.splice(connections.indexOf(socket), 1);
             socket.disconnect();
             twitterStream.stop();
             console.log('Socket disconnected: %s sockets remaining', connections.length);
         });
+        */
     })
+
+    socket.on('disconnect', function(){
+        connections.splice(connections.indexOf(socket), 1);
+        socket.disconnect();
+        if (twitterStream) twitterStream.stop();
+        console.log('Socket disconnected: %s sockets remaining', connections.length);
+    });
 });
 
 /**

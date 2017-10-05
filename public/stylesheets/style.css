@@ -6,13 +6,33 @@ body {
   padding: 0px;
 }
 
-.page-content > .row {
+.page-content {
   margin-left: 0px !important;
   margin-right: 0px !important;
-  margin-top: 60px;
+  margin-top: 65px;
 }
 
 .trendBtn {
   margin: 2px;
+  font-size: 12px;
+}
+
+
+/*=======================================
+TWEET FEED STYLES
+==================================================*/
+.twt-wrapper .panel-body {
+  min-height:600px;
+  max-height:600px;
+  overflow:auto;
+}
+.twt-wrapper .media-list .media img {
+  width:64px;
+  height:64px;
+  border:2px solid #e5e7e8;
+}
+.twt-wrapper .media-list .media {
+  border-bottom:1px dashed #efefef;
+  margin-bottom:25px;
   font-size: 12px;
 }
