@@ -3,13 +3,13 @@
 /**
  * Module dependencies.
  */
-
 var app = require('../app');
 var debug = require('debug')('cab432assignment2:server');
 var http = require('http');
 const Twitter = require('./../services/TwitterService');
 const Sentiment = require('./../services/SentimentAnalysisService');
 const WordAnalysis = require('./../services/WordAnalysisService');
+const DynamoDB = require('./../services/DynamoDBService');
 
 /**
  * Get port from environment and store in Express.
@@ -67,6 +67,7 @@ io.on('connection', function(socket) {
             console.log(prevSearch);
             console.log('stop stream');
 
+            setTimeout(function(){ }, 3000);
         } else {
             prevSearch = true;
         }
@@ -74,7 +75,7 @@ io.on('connection', function(socket) {
         twitterStream = Twitter.stream(payload.keyword);
 
         let lastTimestamp = Date.now(),
-            speedLimiter = 0; //250ms
+            speedLimiter = 0; //500ms
 
         //Turn on Twitter Stream
         twitterStream.on('tweet', function(tweet) {
@@ -91,7 +92,10 @@ io.on('connection', function(socket) {
 
                 words.forEach(function(word) {
                     allWords.push_with_limit(word, arrayLimit);
-                })
+                });
+
+                DynamoDB.updateItem(socket.id, allWords);
+
             }
         });
     });
@@ -171,4 +175,9 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
+
+//DynamoDB.updateItem('123', ['hi', 'rick'], ['like', 'love'], ['gun', 'helnotlo']);
+//var arr = [55, 44, 65];
+//var set = new Set(arr);
+//console.log(set);
 

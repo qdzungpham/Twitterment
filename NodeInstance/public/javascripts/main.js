@@ -75,7 +75,7 @@ function initSocketConnection() {
         $.each(data, function(key, val) {
             topWords += (' ' + val.word + ' | ');
         });
-        annotator.add(graph.series[0].data[99].x, 'Top Words:' + topWords);
+        annotator.add(graph.series[0].data[98].x, 'Top Words:' + topWords);
         annotator.update();
     })
 }
@@ -123,7 +123,7 @@ function addTweet(tweet) {
 
 function initchart() {
 
-    const tv = 100;
+    const tv = 500;
     graph = new Rickshaw.Graph({
         element: document.getElementById('chart'),
         min: -10,
