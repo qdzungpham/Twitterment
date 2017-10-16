@@ -59,25 +59,31 @@ function initSocketConnection() {
         addTweet(data.tweet);
         appendGraphData(data.tweet.sentiment.score);
         displayOverallSentiment();
-        displayPositiveNegativeWords(data.tweet.sentiment.positive, data.tweet.sentiment.negative)
+        //displayPositiveNegativeWords(data.tweet.sentiment.positive, data.tweet.sentiment.negative);
 
         const frequency = 1;
         if(totalTweets % frequency === 0) {
-            socket.emit('getTopWords');
+            //socket.emit('getTopWords');
+            $.ajax({
+                type: "POST",
+                url: '/wordsAnalysis',
+                dataType: 'json',
+                cache: false,
+                data: {socketID: data.socketID}
+            }).done(function (data) {
+                console.log(data);
+                displayTopWords(data.topAllWords, data.topPositiveWords, data.topNegativeWords);
+
+                let topAllWordsString = '';
+                $.each(data.topAllWords, function(key, val) {
+                    topAllWordsString += (' ' + val.word + ' | ');
+                });
+                annotator.add(graph.series[0].data[98].x, 'Top Words:' + topAllWordsString);
+                annotator.update();
+            })
         }
     });
 
-    socket.on('sendTopWords', function(data) {
-        console.log(data);
-        displayTopWords(data);
-
-        let topWords = '';
-        $.each(data, function(key, val) {
-            topWords += (' ' + val.word + ' | ');
-        });
-        annotator.add(graph.series[0].data[98].x, 'Top Words:' + topWords);
-        annotator.update();
-    })
 }
 
 function startStreaming() {
@@ -222,10 +228,22 @@ function displayPositiveNegativeWords(positive, negative) {
     }
 }
 
-function displayTopWords(words) {
+function displayTopWords(allWords, positiveWords, negativeWords) {
     $('#topWords').find('span').remove();
-    $.each(words, function(key, val) {
-
+    $.each(allWords, function(key, val) {
+        if (val.word === '>>') return;
         $('#topWords').append(`<span class="label label-info customBtn">${val.word}</span>`);
+    });
+
+    $('#positiveWords').find('span').remove();
+    $.each(positiveWords, function(key, val) {
+        if (val.word === '>>') return;
+        $('#positiveWords').append(`<span class="label label-success customBtn">${val.word}</span>`);
+    });
+
+    $('#negativeWords').find('span').remove();
+    $.each(negativeWords, function(key, val) {
+        if (val.word === '>>') return;
+        $('#negativeWords').append(`<span class="label label-danger customBtn">${val.word}</span>`);
     })
 }

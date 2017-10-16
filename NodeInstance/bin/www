@@ -47,21 +47,18 @@ io.on('connection', function(socket) {
     let prevSearch = false;
     let twitterStream;
 
-    let allWords = [];
-    const arrayLimit = 1000;
-
-    socket.on('getTopWords', function() {
-        const topWords = WordAnalysis.analyseCount(allWords);
-        if (topWords === null) return;
-        if (topWords.length > 10) {
-            topWords.length = 10;
-        }
-        socket.emit('sendTopWords', topWords);
-    });
+    let allWords = ['>>'];
+    let positiveWords = ['>>'];
+    let negativeWords = ['>>'];
+    const arrayLimit = 10000;
 
     socket.on('search', function(payload) {
         console.log('Keyword: %s', payload.keyword);
-        allWords = [];
+
+        allWords = ['>>'];
+        positiveWords = ['>>'];
+        negativeWords = ['>>'];
+
         if(prevSearch) {
             twitterStream.stop();
             console.log(prevSearch);
@@ -75,7 +72,7 @@ io.on('connection', function(socket) {
         twitterStream = Twitter.stream(payload.keyword);
 
         let lastTimestamp = Date.now(),
-            speedLimiter = 0; //500ms
+            speedLimiter = 250; //250ms
 
         //Turn on Twitter Stream
         twitterStream.on('tweet', function(tweet) {
@@ -85,16 +82,28 @@ io.on('connection', function(socket) {
 
                 lastTimestamp = Date.now();
 
+                const sentimentTweet = Sentiment.getSentimentTweet(tweet);
                 // Send Tweet Object to Client
-                socket.emit('sendTweet', {tweet: Sentiment.getSentimentTweet(tweet)});
+                socket.emit('sendTweet', {tweet: sentimentTweet, socketID: socket.id});
 
                 const words = WordAnalysis.getWords(tweet.text);
+                const posWords = sentimentTweet.sentiment.positive;
+                const negWords = sentimentTweet.sentiment.negative;
 
                 words.forEach(function(word) {
                     allWords.push_with_limit(word, arrayLimit);
                 });
 
-                DynamoDB.updateItem(socket.id, allWords);
+                posWords.forEach(function(word) {
+                    positiveWords.push_with_limit(word, arrayLimit);
+                });
+
+                negWords.forEach(function(word) {
+                    negativeWords.push_with_limit(word, arrayLimit);
+                });
+
+
+                DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
 
             }
         });
@@ -180,4 +189,11 @@ function onListening() {
 //var arr = [55, 44, 65];
 //var set = new Set(arr);
 //console.log(set);
+/*
+DynamoDB.getItem('rSdtnWHmnAyUaIpgAAAB').then(function (data) {
+    console.log(data)
+}).catch(function (error) {
+    console.error(error)
+});
 
+*/

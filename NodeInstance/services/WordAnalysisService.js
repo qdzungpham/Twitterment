@@ -23,7 +23,8 @@ module.exports = {
     },
 
     analyseCount: function(words) {
-        if (words.length == 0) {
+        words = words.split(' ');
+        if (words.length == 1) {
             return null;
         }
         var wordAnalysis = {};

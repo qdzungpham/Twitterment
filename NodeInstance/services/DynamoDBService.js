@@ -1,11 +1,11 @@
 
 
 const AWS = require('aws-sdk');
-AWS.config.update({
-    region:'ap-southeast-2',
-    aws_access_key_id: 'AKIAJRLAKEEDV7NVNFVA',
-    aws_secret_access_key: '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'
-});
+AWS.config = new AWS.Config();
+AWS.config.accessKeyId = "AKIAJRLAKEEDV7NVNFVA";
+AWS.config.secretAccessKey = "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";
+AWS.config.region = "us-west-2";
+
 const dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 module.exports = {
@@ -17,6 +17,12 @@ module.exports = {
                 },
                 "allWords": {
                     S: allWords.join(' ')
+                },
+                "positiveWords": {
+                    S: positiveWords.join(' ')
+                },
+                "negativeWords": {
+                    S: negativeWords.join(' ')
                 }
             },
             ReturnConsumedCapacity: "TOTAL",
@@ -26,5 +32,31 @@ module.exports = {
         dynamodb.putItem(params, function(err, data) {
             if (err) console.log(err, err.stack);
         })
+    },
+
+    getItem: function(socketID) {
+        return new Promise( function( resolve, reject )
+        {
+            const params = {
+                Key: {
+                    "socketID": {
+                        S: socketID
+                    }
+                },
+                TableName: "WordsForAnalysis"
+            };
+
+            dynamodb.getItem(params, function(err, data) {
+                if (err) {
+                    console.log(err, err.stack);
+                    return reject(err)
+                } else {
+                    //console.log(data);
+                    return resolve(data)
+                }
+            })
+        });
     }
 };
+
+
