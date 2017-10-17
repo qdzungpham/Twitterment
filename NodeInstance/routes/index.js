@@ -22,6 +22,8 @@ router.post('/trends', function(req, res, next) {
 router.post('/wordsAnalysis', function(req, res, next) {
     DynamoDB.getItem(req.body.socketID).then(function (data) {
         //console.log(data);
+        if (!data.Item) return;
+
         const topAllWords = WordAnalysis.analyseCount(data.Item.allWords.S);
         if (topAllWords !== null && topAllWords.length > 10) {
             topAllWords.length = 10;
@@ -39,21 +41,8 @@ router.post('/wordsAnalysis', function(req, res, next) {
         console.error(error)
     });
 
-    //const data = DynamoDB.getItem(req.body.socketID);
-    //const topAllWords = WordAnalysis.analyseCount(data.Item.allWords);
-    //const topPositiveWords = WordAnalysis.analyseCount(data.Item.positiveWords);
-    //const topNegativeWords = WordAnalysis.analyseCount(data.Item.negativeWords);
-
-    //res.json({topAllWords: topAllWords, topPositiveWords: topPositiveWords, topNegativeWords: topNegativeWords});
 });
 
 
 
-/*
-Twitter.getTrends(1).then(function(data) {
-    console.log(data);
-}).catch(function(error) {
-    console.error(error);
-});
-*/
 module.exports = router;

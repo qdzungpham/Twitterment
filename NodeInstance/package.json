@@ -20,6 +20,7 @@
     "sentiment": "^4.0.1",
     "serve-favicon": "~2.4.2",
     "socket.io": "^2.0.3",
-    "twit": "^2.2.9"
+    "twit": "^2.2.9",
+    "zlib": "^1.0.5"
   }
 }
