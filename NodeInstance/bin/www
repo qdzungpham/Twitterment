@@ -70,7 +70,7 @@ io.on('connection', function(socket) {
             allWords = ['>>'];
             positiveWords = ['>>'];
             negativeWords = ['>>'];
-            DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
+            DynamoDB.deleteItem(socket.id);
 
             setTimeout(function(){ }, 3000);
         } else {
@@ -126,7 +126,9 @@ io.on('connection', function(socket) {
         if (twitterStream) twitterStream.stop();
         socket.disconnect();
         console.log('Socket disconnected: %s sockets remaining', connections.length);
-        DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
+        if (prevSearch) {
+            DynamoDB.deleteItem(socket.id)
+        }
     });
 });
 

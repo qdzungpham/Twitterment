@@ -43,8 +43,12 @@ function displayTrends(trends, type) {
         button.setAttribute('class', 'btn btn-default customBtn');
         button.appendChild(trend);
         button.onclick = function() {
-            $('#searchInput').val(val.name);
-            startStreaming();
+            const inputText = $('#searchInput').val();
+            if (inputText === '') {
+                $('#searchInput').val(val.name);
+            } else {
+                $('#searchInput').val($('#searchInput').val() + ', ' + val.name);
+            }
         };
         document.getElementById(type).appendChild(button);
     })
@@ -88,6 +92,7 @@ function initSocketConnection() {
 function startStreaming() {
     reset();
     document.getElementById("tweetAnalysis").style.display = "block";
+    $('#inputText').text($('#searchInput').val());
     socket.emit('search', {keyword: $('#searchInput').val()});
     $('html, body').animate({
         scrollTop: $("#tweetAnalysisSection").offset().top
