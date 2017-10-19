@@ -45,6 +45,7 @@ io.on('connection', function(socket) {
     console.log('%s Connected. %s sockets connected', socket.id, connections.length);
 
     let prevSearch = false;
+    let prevKeyWords;
     let twitterStream;
 
     let allWords = ['>>'];
@@ -52,23 +53,31 @@ io.on('connection', function(socket) {
     let negativeWords = ['>>'];
     const arrayLimit = 10000;
 
+    let totalTweets = 0;
+    let totalScore = 0;
+
     socket.on('search', function(payload) {
         console.log('Keyword: %s', payload.keyword);
 
-        allWords = ['>>'];
-        positiveWords = ['>>'];
-        negativeWords = ['>>'];
-
         if(prevSearch) {
             twitterStream.stop();
-            console.log(prevSearch);
-            console.log('stop stream');
+            //console.log(prevSearch);
+            //console.log('stop stream');
+            DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
+
+            totalTweets = 0;
+            totalScore = 0;
+            allWords = ['>>'];
+            positiveWords = ['>>'];
+            negativeWords = ['>>'];
+            DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
 
             setTimeout(function(){ }, 3000);
         } else {
             prevSearch = true;
         }
 
+        prevKeyWords = payload.keyword;
         twitterStream = Twitter.stream(payload.keyword);
 
         let lastTimestamp = Date.now(),
@@ -79,12 +88,15 @@ io.on('connection', function(socket) {
 
             //
             if(tweet.timestamp_ms - lastTimestamp > speedLimiter) {
-
                 lastTimestamp = Date.now();
 
                 const sentimentTweet = Sentiment.getSentimentTweet(tweet);
+
+                totalTweets += 1;
+                totalScore += sentimentTweet.sentiment.score;
+                const avgScore = totalScore/totalTweets;
                 // Send Tweet Object to Client
-                socket.emit('sendTweet', {tweet: sentimentTweet, socketID: socket.id});
+                socket.emit('sendTweet', {tweet: sentimentTweet, avgScore: avgScore, socketID: socket.id});
 
                 const words = WordAnalysis.getWords(tweet.text);
                 const posWords = sentimentTweet.sentiment.positive;
@@ -114,6 +126,7 @@ io.on('connection', function(socket) {
         if (twitterStream) twitterStream.stop();
         socket.disconnect();
         console.log('Socket disconnected: %s sockets remaining', connections.length);
+        DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
     });
 });
 

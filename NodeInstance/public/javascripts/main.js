@@ -9,7 +9,6 @@ let socket;
 let graph;
 let annotator;
 let graphData = 0;
-let totalScore = 0;
 let totalTweets = 0;
 
 function getTrends() {
@@ -57,8 +56,8 @@ function initSocketConnection() {
         console.log(data);
         totalTweets += 1;
         addTweet(data.tweet);
-        appendGraphData(data.tweet.sentiment.score);
-        displayOverallSentiment();
+        appendGraphData(data.tweet.sentiment.score, data.avgScore);
+        displayOverallSentiment(data.avgScore);
         //displayPositiveNegativeWords(data.tweet.sentiment.positive, data.tweet.sentiment.negative);
 
         const frequency = 1;
@@ -97,7 +96,6 @@ function startStreaming() {
 
 function reset() {
     graphData = 0;
-    totalScore = 0;
     totalTweets = 0;
     $('#positiveWords').find('span').remove();
     $('#negativeWords').find('span').remove();
@@ -129,7 +127,7 @@ function addTweet(tweet) {
 
 function initchart() {
 
-    const tv = 500;
+    const tv = 250;
     graph = new Rickshaw.Graph({
         element: document.getElementById('chart'),
         min: -10,
@@ -185,13 +183,11 @@ function initchart() {
     }, tv );
 }
 
-function appendGraphData(score) {
-    totalScore += score;
-    graphData = { RealTimeScore: score, AverageScore: totalScore/totalTweets};
+function appendGraphData(score, avg) {
+    graphData = { RealTimeScore: score, AverageScore: avg};
 }
 
-function displayOverallSentiment() {
-    const avg = totalScore/totalTweets;
+function displayOverallSentiment(avg) {
     if(avg < -0.5) {
         $('#overallSentiment').find('i').remove();
         $('#overallSentiment').append('<i class="fa fa-frown-o fa-5x" aria-hidden="true" style="color:red"></i>')
@@ -204,29 +200,6 @@ function displayOverallSentiment() {
     }
 }
 
-function displayPositiveNegativeWords(positive, negative) {
-    if (positive.length > 0) {
-        $.each(positive, function(key, val) {
-            let currentNumWords  = document.getElementById("positiveWords").childElementCount;
-            while (currentNumWords >= 10) {
-                $('#positiveWords').find('span').first().remove();
-                currentNumWords -= 1;
-            }
-            $('#positiveWords').append(`<span class="label label-success customBtn">${val}</span>`);
-        })
-    }
-
-    if (negative.length > 0) {
-        let currentNumWords  = document.getElementById("negativeWords").childElementCount;
-        $.each(negative, function(key, val) {
-            while (currentNumWords >= 10) {
-                $('#negativeWords').find('span').first().remove();
-                currentNumWords -= 1;
-            }
-            $('#negativeWords').append(`<span class="label label-danger customBtn">${val}</span>`);
-        })
-    }
-}
 
 function displayTopWords(allWords, positiveWords, negativeWords) {
     $('#topWords').find('span').remove();

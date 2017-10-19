@@ -9,37 +9,36 @@ AWS.config.region = "us-west-2";
 
 const dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-function compressString() {
-    return new Promise( function( resolve, reject )
-    {
-
-    });
-}
 
 module.exports = {
     updateItem: function(socketID, allWords, positiveWords, negativeWords) {
-        const params = {
-            Item: {
-                "socketID": {
-                    S: socketID
-                },
-                "allWords": {
-                    S: allWords.join(' ')
-                },
-                "positiveWords": {
-                    S: positiveWords.join(' ')
-                },
-                "negativeWords": {
-                    S: negativeWords.join(' ')
-                }
-            },
-            ReturnConsumedCapacity: "TOTAL",
-            TableName: "WordsForAnalysis"
-        };
+        zlib.deflate(allWords.join(' '), (err, buffer) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const params = {
+                    Item: {
+                        "socketID": {
+                            S: socketID
+                        },
+                        "allWords": {
+                            B: buffer
+                        },
+                        "positiveWords": {
+                            S: positiveWords.join(' ')
+                        },
+                        "negativeWords": {
+                            S: negativeWords.join(' ')
+                        }
+                    },
+                    TableName: "WordsForAnalysis"
+                };
 
-        dynamodb.putItem(params, function(err, data) {
-            if (err) console.log(err, err.stack);
-        })
+                dynamodb.putItem(params, function(err) {
+                    if (err) console.log(err, err.stack);
+                })
+            }
+        });
     },
 
     getItem: function(socketID) {
@@ -56,7 +55,61 @@ module.exports = {
 
             dynamodb.getItem(params, function(err, data) {
                 if (err) {
-                    console.log(err, err.stack);
+                    return reject(err)
+                } else {
+                    //console.log(data);
+                    return resolve(data)
+                }
+            })
+        });
+    },
+
+    saveSearch: function(keyWords, avgScore, allWords, positiveWords, negativeWords) {
+        const params = {
+            Item: {
+                "keyWords": {
+                    S: keyWords.replace(/\s/g, "")
+                },
+                "date": {
+                    S: new Date().toISOString()
+                },
+                "avgScore": {
+                    N: avgScore.toString()
+                },
+                "allWords": {
+                    S: allWords.join(' ')
+                },
+                "positiveWords": {
+                    S: positiveWords.join(' ')
+                },
+                "negativeWords": {
+                    S: negativeWords.join(' ')
+                }
+            },
+            TableName: "SearchHistory"
+        };
+
+        dynamodb.putItem(params, function(err) {
+            if (err) console.log(err, err.stack);
+        })
+    },
+
+    getPrevSearch: function(keyWords) {
+
+        return new Promise( function( resolve, reject )
+        {
+            const params = {
+                KeyConditionExpression: "keyWords = :keyWords",
+                ExpressionAttributeValues: {
+                    ":keyWords": {
+                        S: keyWords.replace(/\s/g, "")
+                    }
+                },
+                TableName: "SearchHistory"
+            };
+
+            dynamodb.query(params, function(err, data) {
+                if (err) {
                     return reject(err)
                 } else {
                     //console.log(data);
@@ -65,24 +118,7 @@ module.exports = {
             })
         });
     }
+
+
 };
-
-
-const input = 'he llo hi';
-var buff;
-zlib.deflate(input, (err, buffer) => {
-    if (err) {
-        console.log(err);
-    } else {
-        console.log(buffer);
-        zlib.inflate(buffer, (err, buffer) => {
-            if (err) {
-                console.log(err);
-            } else {
-                console.log(buffer.toString());
-
-            }
-        });
-    }
-});
 

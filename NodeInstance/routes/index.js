@@ -1,5 +1,6 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
+const zlib = require('zlib');
 
 const Twitter = require('./../services/TwitterService');
 const DynamoDB = require('./../services/DynamoDBService');
@@ -24,10 +25,6 @@ router.post('/wordsAnalysis', function(req, res, next) {
         //console.log(data);
         if (!data.Item) return;
 
-        const topAllWords = WordAnalysis.analyseCount(data.Item.allWords.S);
-        if (topAllWords !== null && topAllWords.length > 10) {
-            topAllWords.length = 10;
-        }
         const topPositiveWords = WordAnalysis.analyseCount(data.Item.positiveWords.S);
         if (topPositiveWords !== null && topPositiveWords.length > 10) {
             topPositiveWords.length = 10;
@@ -36,11 +33,31 @@ router.post('/wordsAnalysis', function(req, res, next) {
         if (topNegativeWords !== null && topNegativeWords.length > 10) {
             topNegativeWords.length = 10;
         }
-        res.json({topAllWords: topAllWords, topPositiveWords: topPositiveWords, topNegativeWords: topNegativeWords});
+
+        zlib.inflate(data.Item.allWords.B, (err, buffer) => {
+            if (err) {
+                console.log(err);
+            } else {
+                const topAllWords = WordAnalysis.analyseCount(buffer.toString());
+                if (topAllWords !== null && topAllWords.length > 10) {
+                    topAllWords.length = 10;
+                }
+                res.json({topAllWords: topAllWords, topPositiveWords: topPositiveWords, topNegativeWords: topNegativeWords});
+            }
+        });
+
     }).catch(function (error) {
         console.error(error)
     });
 
+});
+
+router.post('/trends', function(req, res, next) {
+    DynamoDB.getPrevSearch(req.body.keyWords).then(function (data) {
+        console.log(data);
+    }).catch(function (error) {
+        console.error(error)
+    });
 });
 
 
