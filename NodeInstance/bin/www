@@ -10,6 +10,7 @@ const Twitter = require('./../services/TwitterService');
 const Sentiment = require('./../services/SentimentAnalysisService');
 const WordAnalysis = require('./../services/WordAnalysisService');
 const DynamoDB = require('./../services/DynamoDBService');
+const RedisService = require('./../services/RedisService');
 
 /**
  * Get port from environment and store in Express.
@@ -70,7 +71,10 @@ io.on('connection', function(socket) {
             allWords = ['>>'];
             positiveWords = ['>>'];
             negativeWords = ['>>'];
-            DynamoDB.deleteItem(socket.id);
+
+            RedisService.delete(socket.id, 'allWords');
+            RedisService.delete(socket.id, 'positiveWords');
+            RedisService.delete(socket.id, 'negativeWords');
 
             setTimeout(function(){ }, 3000);
         } else {
@@ -102,6 +106,7 @@ io.on('connection', function(socket) {
                 const posWords = sentimentTweet.sentiment.positive;
                 const negWords = sentimentTweet.sentiment.negative;
 
+
                 words.forEach(function(word) {
                     allWords.push_with_limit(word, arrayLimit);
                 });
@@ -115,7 +120,15 @@ io.on('connection', function(socket) {
                 });
 
 
-                DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
+                //DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
+
+
+
+                RedisService.push(socket.id, 'allWords', words);
+                RedisService.push(socket.id, 'positiveWords', posWords);
+                RedisService.push(socket.id, 'negativeWords', negWords);
+
+
 
             }
         });
@@ -127,7 +140,10 @@ io.on('connection', function(socket) {
         socket.disconnect();
         console.log('Socket disconnected: %s sockets remaining', connections.length);
         if (prevSearch) {
-            DynamoDB.deleteItem(socket.id)
+            RedisService.delete(socket.id, 'allWords');
+            RedisService.delete(socket.id, 'positiveWords');
+            RedisService.delete(socket.id, 'negativeWords');
+            DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
         }
     });
 });
