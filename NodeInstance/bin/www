@@ -216,15 +216,3 @@ function onListening() {
   debug('Listening on ' + bind);
 }
 
-//DynamoDB.updateItem('123', ['hi', 'rick'], ['like', 'love'], ['gun', 'helnotlo']);
-//var arr = [55, 44, 65];
-//var set = new Set(arr);
-//console.log(set);
-/*
-DynamoDB.getItem('rSdtnWHmnAyUaIpgAAAB').then(function (data) {
-    console.log(data)
-}).catch(function (error) {
-    console.error(error)
-});
-
-*/

@@ -79,7 +79,7 @@ function initSocketConnection() {
 
                 let topAllWordsString = '';
                 $.each(data.topAllWords, function(key, val) {
-                    topAllWordsString += (' ' + val.word + ' | ');
+                    topAllWordsString += (' ' + val.word + ' |');
                 });
                 annotator.add(graph.series[0].data[98].x, 'Top Words:' + topAllWordsString);
                 annotator.update();
@@ -90,13 +90,20 @@ function initSocketConnection() {
 }
 
 function startStreaming() {
+    const keyWord = $('#searchInput').val();
+    if (keyWord === null || keyWord.trim() === '') {
+        window.alert('Please enter one or more keywords.');
+        return;
+    }
     reset();
     document.getElementById("tweetAnalysis").style.display = "block";
-    $('#inputText').text($('#searchInput').val());
-    socket.emit('search', {keyword: $('#searchInput').val()});
+    $('#inputText').text(keyWord);
+    socket.emit('search', {keyword: keyWord});
     $('html, body').animate({
         scrollTop: $("#tweetAnalysisSection").offset().top
     }, 1000);
+
+    getPrevSearch();
 }
 
 function reset() {
@@ -109,6 +116,31 @@ function reset() {
     $('#overallSentiment').find('i').remove();
     $('#totalTweet').text(totalTweets);
 
+}
+
+function getPrevSearch() {
+    $.ajax({
+        type: "POST",
+        url: '/getPrevSearch',
+        dataType: 'json',
+        cache: false,
+        data: {keyWords: $('#searchInput').val()}
+    }).done(function (data) {
+        console.log(data);
+        $('#prevSearchTable').find('tr').remove();
+        for (let i = data.Items.length - 1; i >= 0; i--)  {
+            const val = data.Items[i];
+            const date = new Date(val.date.S).toLocaleString();
+            $('#prevSearchTable').append(`<tr>
+                                            <th class="col-xs-2" scope="row">${date}</th>
+                                            <td class="col-xs-1">${Math.round(val.avgScore.N * 100)/100}</td>
+                                            <td class="col-xs-3">${val.topAllWords.S}</td>
+                                            <td class="col-xs-3">${val.topPositiveWords.S}</td>
+                                            <td class="col-xs-3">${val.topNegativeWords.S}</td>
+                                          </tr>`);
+        }
+
+    })
 }
 
 function addTweet(tweet) {

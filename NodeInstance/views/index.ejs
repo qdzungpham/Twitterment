@@ -22,7 +22,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="input-group input-group-lg">
-        <input id="searchInput" type="text" class="form-control" placeholder="Enter a keyword...">
+        <input id="searchInput" type="text" class="form-control" placeholder="Enter one or more keywords...">
         <span class="input-group-btn">
           <button onclick="startStreaming()" class="btn btn-primary" type="button">
             Start
@@ -73,6 +73,20 @@
       <div id="similarSearches">
         <strong>Recent Analytic Results for <u id="inputText" class="text-success"></u>:</strong>
       </div>
+      <table class="table table-fixed">
+        <thead>
+          <tr>
+            <th class="col-xs-2">Date</th>
+            <th class="col-xs-1">Average Sentiment Score</th>
+            <th class="col-xs-3">Top Words</th>
+            <th class="col-xs-3">Top Positive Words</th>
+            <th class="col-xs-3">Top Negative Words</th>
+          </tr>
+        </thead>
+        <tbody id="prevSearchTable">
+
+        </tbody>
+      </table>
     </div>
     <div class="col-md-3">
       <div class="twt-wrapper">

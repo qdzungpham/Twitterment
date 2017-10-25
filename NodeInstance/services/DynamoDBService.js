@@ -1,6 +1,6 @@
 const AWS = require('aws-sdk');
 const Promise = require('bluebird');
-const zlib = require('zlib');
+const WordAnalysis = require('./../services/WordAnalysisService');
 
 AWS.config = new AWS.Config();
 AWS.config.accessKeyId = "AKIAJRLAKEEDV7NVNFVA";
@@ -9,105 +9,40 @@ AWS.config.region = "us-west-2";
 
 const dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-function compressString(string) {
-    return new Promise(function (resolve, reject) {
-        zlib.deflate(string, (err, buffer) => {
-            if (err) {
-                return reject(err)
-            } else {
-                return resolve(buffer)
-            }
-        });
-    })
-}
-
-function decompressString(buffer) {
-    return new Promise(function (resolve, reject) {
-        zlib.inflate(buffer, (err, buff) => {
-            if (err) {
-                return reject(err)
-            } else {
-                return resolve(buff.toString())
-            }
-        });
-    })
-}
-
 module.exports = {
-    updateItem: function(socketID, allWords, positiveWords, negativeWords) {
-
-        Promise.all([compressString(allWords.join(' ')), compressString(positiveWords.join(' ')), compressString(negativeWords.join(' '))]).then(function(buffer) {
-            const params = {
-                Item: {
-                    "socketID": {
-                        S: socketID
-                    },
-                    "allWords": {
-                        B: buffer[0]
-                    },
-                    "positiveWords": {
-                        B: buffer[1]
-                    },
-                    "negativeWords": {
-                        B: buffer[2]
-                    }
-                },
-                TableName: "WordsForAnalysis"
-            };
-
-            dynamodb.putItem(params, function(err) {
-                if (err) console.log(err, err.stack);
-            })
-
-        }).catch(function (error) {
-            console.error(error)
-        });
-    },
-
-    getItem: function(socketID) {
-        return new Promise( function( resolve, reject )
-        {
-            const params = {
-                Key: {
-                    "socketID": {
-                        S: socketID
-                    }
-                },
-                TableName: "WordsForAnalysis"
-            };
-
-            dynamodb.getItem(params, function(err, data) {
-                if (err) {
-                    console.error(err)
-                } else {
-                    if (!data.Item) return;
-                    Promise.all([decompressString(data.Item.allWords.B), decompressString(data.Item.positiveWords.B), decompressString(data.Item.negativeWords.B)]).then(function(string) {
-                        return resolve(string)
-                    }).catch(function (error) {
-                        return reject(error)
-                    });
-                }
-            })
-        });
-
-
-    },
-
-    deleteItem: function (socketID) {
-        const params = {
-            Key: {
-                "socketID": {
-                    S: socketID
-                }
-            },
-            TableName: "WordsForAnalysis"
-        };
-        dynamodb.deleteItem(params, function(err, data) {
-            if (err) console.error(err); // an error occurred
-        });
-    },
-
     saveSearch: function(keyWords, avgScore, allWords, positiveWords, negativeWords) {
+
+
+        const topAllWords = WordAnalysis.analyseCount(allWords);
+        if (topAllWords !== null && topAllWords.length > 10) {
+            topAllWords.length = 10;
+        }
+        let topAllWordsString = '| ';
+        topAllWords.forEach(function (val) {
+            if (val.word === '>>') return;
+            topAllWordsString += (val.word + ' | ');
+        });
+
+        const topPositiveWords = WordAnalysis.analyseCount(positiveWords);
+        if (topPositiveWords !== null && topPositiveWords.length > 10) {
+            topPositiveWords.length = 10;
+        }
+        let topPositiveWordsString = '| ';
+        topPositiveWords.forEach(function (val) {
+            if (val.word === '>>') return;
+            topPositiveWordsString += (val.word + ' | ');
+        });
+
+        const topNegativeWords = WordAnalysis.analyseCount(negativeWords);
+        if (topNegativeWords !== null && topNegativeWords.length > 10) {
+            topNegativeWords.length = 10;
+        }
+        let topNegativeWordsString = '| ';
+        topNegativeWords.forEach(function (val) {
+            if (val.word === '>>') return;
+            topNegativeWordsString += (val.word + ' | ');
+        });
+
         const params = {
             Item: {
                 "keyWords": {
@@ -119,14 +54,14 @@ module.exports = {
                 "avgScore": {
                     N: avgScore.toString()
                 },
-                "allWords": {
-                    S: allWords.join(' ')
+                "topAllWords": {
+                    S: topAllWordsString
                 },
-                "positiveWords": {
-                    S: positiveWords.join(' ')
+                "topPositiveWords": {
+                    S: topPositiveWordsString
                 },
-                "negativeWords": {
-                    S: negativeWords.join(' ')
+                "topNegativeWords": {
+                    S: topNegativeWordsString
                 }
             },
             TableName: "SearchHistory"
