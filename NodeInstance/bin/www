@@ -25,14 +25,6 @@ app.set('port', port);
 
 var server = http.createServer(app);
 
-Array.prototype.push_with_limit = function(element, limit){
-    var limit = limit || 10;
-    var length = this.length;
-    if( length == limit ){
-        this.shift();
-    }
-    this.push(element);
-};
 /*
 Create Server and Socket.io Instance
 ==================*/
@@ -49,11 +41,6 @@ io.on('connection', function(socket) {
     let prevKeyWords;
     let twitterStream;
 
-    let allWords = ['>>'];
-    let positiveWords = ['>>'];
-    let negativeWords = ['>>'];
-    const arrayLimit = 10000;
-
     let totalTweets = 0;
     let totalScore = 0;
 
@@ -64,13 +51,12 @@ io.on('connection', function(socket) {
             twitterStream.stop();
             //console.log(prevSearch);
             //console.log('stop stream');
-            DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
+            if (totalTweets !== 0) {
+                DynamoDB.saveSearch(socket.id, prevKeyWords, totalScore/totalTweets);
+            }
 
             totalTweets = 0;
             totalScore = 0;
-            allWords = ['>>'];
-            positiveWords = ['>>'];
-            negativeWords = ['>>'];
 
             RedisService.delete(socket.id, 'allWords');
             RedisService.delete(socket.id, 'positiveWords');
@@ -106,24 +92,6 @@ io.on('connection', function(socket) {
                 const posWords = sentimentTweet.sentiment.positive;
                 const negWords = sentimentTweet.sentiment.negative;
 
-
-                words.forEach(function(word) {
-                    allWords.push_with_limit(word, arrayLimit);
-                });
-
-                posWords.forEach(function(word) {
-                    positiveWords.push_with_limit(word, arrayLimit);
-                });
-
-                negWords.forEach(function(word) {
-                    negativeWords.push_with_limit(word, arrayLimit);
-                });
-
-
-                //DynamoDB.updateItem(socket.id, allWords, positiveWords, negativeWords);
-
-
-
                 RedisService.push(socket.id, 'allWords', words);
                 RedisService.push(socket.id, 'positiveWords', posWords);
                 RedisService.push(socket.id, 'negativeWords', negWords);
@@ -140,10 +108,12 @@ io.on('connection', function(socket) {
         socket.disconnect();
         console.log('Socket disconnected: %s sockets remaining', connections.length);
         if (prevSearch) {
+            if (totalTweets !== 0) {
+                DynamoDB.saveSearch(socket.id, prevKeyWords, totalScore/totalTweets);
+            }
             RedisService.delete(socket.id, 'allWords');
             RedisService.delete(socket.id, 'positiveWords');
             RedisService.delete(socket.id, 'negativeWords');
-            DynamoDB.saveSearch(prevKeyWords, totalScore/totalTweets, allWords, positiveWords, negativeWords);
         }
     });
 });

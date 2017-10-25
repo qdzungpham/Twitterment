@@ -3,6 +3,7 @@ $(document).ready(function() {
     initSocketConnection();
     initchart();
     document.getElementById("tweetAnalysis").style.display = "none";
+
 });
 
 let socket;
@@ -19,7 +20,7 @@ function getTrends() {
         cache: false,
         data: {WOEID: 1}
     }).done(function (data) {
-        console.log(data);
+        //console.log(data);
         displayTrends(data[0].trends, 'globalTrends')
     });
     $.ajax({
@@ -29,7 +30,7 @@ function getTrends() {
         cache: false,
         data: {WOEID: 23424748}
     }).done(function (data) {
-        console.log(data);
+        //console.log(data);
         displayTrends(data[0].trends, 'auTrends')
     })
 }
@@ -57,7 +58,7 @@ function displayTrends(trends, type) {
 function initSocketConnection() {
     socket = io();
     socket.on('sendTweet', function(data) {
-        console.log(data);
+        //console.log(data);
         totalTweets += 1;
         addTweet(data.tweet);
         appendGraphData(data.tweet.sentiment.score, data.avgScore);
@@ -69,12 +70,12 @@ function initSocketConnection() {
             //socket.emit('getTopWords');
             $.ajax({
                 type: "POST",
-                url: '/wordsAnalysis',
+                url: '/analysis',
                 dataType: 'json',
                 cache: false,
                 data: {socketID: data.socketID}
             }).done(function (data) {
-                console.log(data);
+                //console.log(data);
                 displayTopWords(data.topAllWords, data.topPositiveWords, data.topNegativeWords);
 
                 let topAllWordsString = '';
@@ -126,7 +127,7 @@ function getPrevSearch() {
         cache: false,
         data: {keyWords: $('#searchInput').val()}
     }).done(function (data) {
-        console.log(data);
+        //console.log(data);
         $('#prevSearchTable').find('tr').remove();
         for (let i = data.Items.length - 1; i >= 0; i--)  {
             const val = data.Items[i];
