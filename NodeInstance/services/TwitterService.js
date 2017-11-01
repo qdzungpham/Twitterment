@@ -1,7 +1,7 @@
 //Require Dependencies
 const Twit = require('twit');
 const Promise = require('bluebird');
-
+//login details for the twitter API
 const config = {
     consumer_key:         'YSc1Wr6hjrYNzT2tDQllMWtkN',
     consumer_secret:      'mylliNEO3gxwyi0DH53L0NOsBrYACAORmKmRwUIRMtb50kpLro',
@@ -14,12 +14,13 @@ const config = {
 let Twitter = new Twit(config);
 
 module.exports = {
-
+    // retrieve the stream of tweets from twitter by entering keywords
     stream: function(keyword) {
         return Twitter.stream('statuses/filter', {language: 'en', track: keyword});
 
     },
-
+    // get trends in the area by using the Twitter Location Id
+    //Example: Australia : 23424748
     getTrends: function(locationId) {
         return new Promise( function( resolve, reject )
         {

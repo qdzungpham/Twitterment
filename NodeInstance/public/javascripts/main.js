@@ -11,13 +11,14 @@ let graph;
 let annotator;
 let graphData = 0;
 let totalTweets = 0;
-
+//using ajax to get trends from the server
 function getTrends() {
     $.ajax({
         type: "POST",
         url: '/trends',
         dataType: 'json',
         cache: false,
+        // Location Id of worldwide
         data: {WOEID: 1}
     }).done(function (data) {
         //console.log(data);
@@ -28,6 +29,7 @@ function getTrends() {
         url: '/trends',
         dataType: 'json',
         cache: false,
+        //Australia location ID
         data: {WOEID: 23424748}
     }).done(function (data) {
         //console.log(data);
@@ -35,7 +37,7 @@ function getTrends() {
     })
 }
 
-
+//display the trends
 function displayTrends(trends, type) {
     $.each(trends, function(key, val) {
         const button = document.createElement('button');
@@ -89,7 +91,7 @@ function initSocketConnection() {
     });
 
 }
-
+// check for the keyword, reset the data of the previous stream and start a new stream
 function startStreaming() {
     const keyWord = $('#searchInput').val();
     if (keyWord === null || keyWord.trim() === '') {
@@ -106,7 +108,7 @@ function startStreaming() {
 
     getPrevSearch();
 }
-
+// Reset the data of the stream
 function reset() {
     graphData = 0;
     totalTweets = 0;
@@ -118,7 +120,7 @@ function reset() {
     $('#totalTweet').text(totalTweets);
 
 }
-
+//display the data of previous stream of the keyword
 function getPrevSearch() {
     $.ajax({
         type: "POST",
@@ -162,7 +164,7 @@ function addTweet(tweet) {
     $('#totalTweet').text(totalTweets);
 
 }
-
+//init the chart that used to displayy the overall sentiment
 function initchart() {
 
     const tv = 250;
@@ -220,11 +222,12 @@ function initchart() {
 
     }, tv );
 }
-
+// append the data into the graph
 function appendGraphData(score, avg) {
     graphData = { RealTimeScore: score, AverageScore: avg};
 }
 
+//display overall sentiment using icon based in the average score
 function displayOverallSentiment(avg) {
     if(avg < -0.5) {
         $('#overallSentiment').find('i').remove();
@@ -238,7 +241,7 @@ function displayOverallSentiment(avg) {
     }
 }
 
-
+//get the top all/postive/negative words from json response
 function displayTopWords(allWords, positiveWords, negativeWords) {
     $('#topWords').find('span').remove();
     $.each(allWords, function(key, val) {

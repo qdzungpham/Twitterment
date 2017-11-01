@@ -2,6 +2,7 @@ const pos = require('pos');
 const natural = require('natural');
 
 module.exports = {
+
     getWords : function(text) {
         const allWords = [];
 

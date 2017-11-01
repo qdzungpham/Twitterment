@@ -4,6 +4,7 @@ const WordAnalysis = require('./../services/WordAnalysisService');
 const RedisService = require('./../services/RedisService');
 
 /* GET users listing. */
+// Get the data of the stream from redis service, and send them as a json response.
 router.post('/', function(req, res, next) {
     Promise.all([RedisService.get(req.body.socketID, 'allWords'), RedisService.get(req.body.socketID, 'positiveWords'),
         RedisService.get(req.body.socketID, 'negativeWords')]).then(function (data) {

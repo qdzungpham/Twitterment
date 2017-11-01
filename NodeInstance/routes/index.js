@@ -8,7 +8,7 @@ const DynamoDB = require('./../services/DynamoDBService');
 router.get('/', function(req, res, next) {
     res.render('index', { title: 'Twitterment' });
 });
-
+//get twitter trends and send them as json response
 router.post('/trends', function(req, res, next) {
     Twitter.getTrends(req.body.WOEID).then(function(data) {
         //console.log(data);
@@ -18,7 +18,7 @@ router.post('/trends', function(req, res, next) {
     });
 });
 
-
+// get the data for the previous stream and send them as json response
 router.post('/getPrevSearch', function(req, res, next) {
     DynamoDB.getPrevSearch(req.body.keyWords).then(function (data) {
         //console.log(data);

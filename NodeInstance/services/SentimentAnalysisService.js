@@ -1,5 +1,5 @@
 const Sentiment = require('sentiment');
-
+// append tweet to the array with  sentiment, sentiment score and icon
 function appendTweet(tweet, sentiment, overallSentiment, icon) {
     const sentimentTweet = {
         sentiment: sentiment,
@@ -22,6 +22,7 @@ function appendTweet(tweet, sentiment, overallSentiment, icon) {
     return sentimentTweet;
 }
 module.exports = {
+    //get the tweet from Twitter API, get the sentiment, calculate the sentiment score and icon, append the tweet
     getSentimentTweet: function(tweet) {
         let tweetSentiment = Sentiment(tweet.text);
         let overallSentiment;

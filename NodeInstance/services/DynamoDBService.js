@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const Promise = require('bluebird');
 const WordAnalysis = require('./../services/WordAnalysisService');
 const RedisService = require('./../services/RedisService');
-
+//aws details for using DynamoDB
 AWS.config = new AWS.Config();
 AWS.config.accessKeyId = "AKIAJRLAKEEDV7NVNFVA";
 AWS.config.secretAccessKey = "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";
@@ -11,6 +11,8 @@ AWS.config.region = "us-west-2";
 const dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 module.exports = {
+
+    // get the data of the stream from redis(cache) and save the data into dynamoDB
     saveSearch: function(socketID, keyWords, avgScore) {
 
         Promise.all([RedisService.get(socketID, 'allWords'), RedisService.get(socketID, 'positiveWords'),
@@ -81,7 +83,7 @@ module.exports = {
             console.error(error)
         });
     },
-
+    //Get previous stream result from the dynamoDB using keyword
     getPrevSearch: function(keyWords) {
 
         return new Promise( function( resolve, reject )
